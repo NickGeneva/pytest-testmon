@@ -645,7 +645,7 @@ class DB:  # pylint: disable=too-many-public-methods
         return [dict(row) for row in cursor]
 
     def fetch_or_create_environment(
-        self, environment_name, system_packages, python_version
+        self, environment_name, system_packages, python_version, ignore_system_packages
     ):
         with self.con as con:
             con.execute("BEGIN IMMEDIATE TRANSACTION")
@@ -669,7 +669,8 @@ class DB:  # pylint: disable=too-many-public-methods
             else:
                 packages_changed = False
 
-            packages_changed = False
+            packages_changed = (not ignore_system_packages) and packages_changed
+
             if not environment or packages_changed:
                 try:
                     cursor.execute(
@@ -704,9 +705,10 @@ class DB:  # pylint: disable=too-many-public-methods
         system_packages: str,
         python_version: str,
         execution_metadata: dict,  # pylint: disable=unused-argument
+        ignore_system_packages: bool = False
     ) -> [int, list]:  # exec_id  # changed_file_data  # future_string2
         exec_id, packages_changed = self.fetch_or_create_environment(
-            environment_name, system_packages, python_version
+            environment_name, system_packages, python_version, ignore_system_packages
         )
         return {
             "exec_id": exec_id,

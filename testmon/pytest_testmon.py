@@ -122,6 +122,12 @@ def pytest_addoption(parser):
         type="args",
         default=[],
     )
+    parser.addini(
+        "testmon_ignore_system_packages",
+        "ignore system packages when detecting environment changes",
+        type="bool",
+        default=False,
+    )
     parser.addini("tmnet_url", "URL of the testmon.net api server.")
     parser.addini("tmnet_api_key", "testmon api key")
 
@@ -143,6 +149,7 @@ def init_testmon_data(config: Config):
         config.getini("environment_expression")
     )
     ignore_dependencies = config.getini("testmon_ignore_dependencies")
+    ignore_system_packages = config.getini("testmon_ignore_system_packages")
 
     system_packages = get_system_packages(ignore=ignore_dependencies)
 
@@ -181,6 +188,7 @@ def init_testmon_data(config: Config):
         environment=environment,
         system_packages=system_packages,
         readonly=get_running_as(config) == "worker",
+        ignore_system_packages=ignore_system_packages,
     )
     testmon_data.determine_stable(bool(rpc_proxy))
     config.testmon_data = testmon_data

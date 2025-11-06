@@ -165,6 +165,7 @@ class TestmonData:  # pylint: disable=too-many-instance-attributes
         system_packages=None,
         python_version=None,
         readonly=False,
+        ignore_system_packages=False,
     ):
         self.rootdir = rootdir
         self.environment = environment if environment else "default"
@@ -183,16 +184,29 @@ class TestmonData:  # pylint: disable=too-many-instance-attributes
             )  # pylint: disable=invalid-name
 
         try:
-            result = self.db.initiate_execution(
-                self.environment,
-                system_packages,
-                python_version,
-                {
-                    "tm_client_version": TM_CLIENT_VERSION,
-                    "git_head_sha": git_current_head(),
-                    "ci": os.environ.get("CI"),
-                },
-            )
+            if isinstance(self.db, db.DB):
+                result = self.db.initiate_execution(
+                    self.environment,
+                    system_packages,
+                    python_version,
+                    {
+                        "tm_client_version": TM_CLIENT_VERSION,
+                        "git_head_sha": git_current_head(),
+                        "ci": os.environ.get("CI"),
+                    },
+                    ignore_system_packages,
+                )
+            else:
+                result = self.db.initiate_execution(
+                    self.environment,
+                    system_packages,
+                    python_version,
+                    {
+                        "tm_client_version": TM_CLIENT_VERSION,
+                        "git_head_sha": git_current_head(),
+                        "ci": os.environ.get("CI"),
+                    },
+                )
         except (ConnectionRefusedError, Fault, ProtocolError, gaierror) as exc:
             logger.error(
                 (
@@ -205,7 +219,7 @@ class TestmonData:  # pylint: disable=too-many-instance-attributes
                 os.path.join(self.rootdir, get_data_file_path())
             )  # pylint: disable=invalid-name
             result = self.db.initiate_execution(
-                self.environment, system_packages, python_version, {}
+                self.environment, system_packages, python_version, {}, ignore_system_packages
             )
         self.exec_id = result["exec_id"]
 
