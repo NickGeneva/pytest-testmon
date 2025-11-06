@@ -668,6 +668,8 @@ class DB:  # pylint: disable=too-many-public-methods
                 )
             else:
                 packages_changed = False
+
+            packages_changed = False
             if not environment or packages_changed:
                 try:
                     cursor.execute(
